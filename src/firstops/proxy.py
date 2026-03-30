@@ -118,20 +118,34 @@ def _make_handler(key, bearer_token: str, gateway: str, local_port: int):
                 self._forward(method, gateway_url, upstream_headers, body)
 
         def _forward(self, method: str, url: str, headers: dict, body: bytes | None):
-            """Forward a non-streaming request."""
+            """Forward a request, streaming if the response is SSE."""
             try:
-                resp = client.request(method, url, headers=headers, content=body)
+                # Use a streaming request so we can detect SSE responses
+                # before reading the full body.
+                with httpx.stream(
+                    method, url, headers=headers, content=body,
+                    timeout=httpx.Timeout(120.0, connect=10.0),
+                ) as resp:
+                    content_type = resp.headers.get("content-type", "")
+                    is_sse = "text/event-stream" in content_type
+
+                    self.send_response(resp.status_code)
+                    for k, v in resp.headers.items():
+                        if k.lower() not in ("transfer-encoding", "connection"):
+                            self.send_header(k, v)
+                    self.end_headers()
+
+                    if is_sse:
+                        # Stream SSE chunks with flushing so the MCP client
+                        # receives events incrementally instead of timing out.
+                        for chunk in resp.iter_bytes():
+                            self.wfile.write(chunk)
+                            self.wfile.flush()
+                    else:
+                        self.wfile.write(resp.read())
             except httpx.HTTPError as e:
                 logger.error("upstream request failed: %s", e)
                 self.send_error(502, "upstream request failed")
-                return
-
-            self.send_response(resp.status_code)
-            for k, v in resp.headers.items():
-                if k.lower() not in ("transfer-encoding", "connection"):
-                    self.send_header(k, v)
-            self.end_headers()
-            self.wfile.write(resp.content)
 
         def _stream_sse(self, url: str, headers: dict):
             """Stream an SSE response, rewriting gateway URLs to localhost."""
