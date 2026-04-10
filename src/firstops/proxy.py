@@ -3,6 +3,7 @@
 import logging
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from socketserver import ThreadingMixIn
 from urllib.parse import urlparse, urlunparse
 
 import httpx
@@ -47,7 +48,11 @@ def init(
         raise ValueError(f"invalid gateway_url: {gateway_url}")
 
     handler_class = _make_handler(key, bearer_token, gateway, port)
-    _server = HTTPServer(("127.0.0.1", port), handler_class)
+
+    class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
+        daemon_threads = True
+
+    _server = ThreadingHTTPServer(("127.0.0.1", port), handler_class)
     _server_thread = threading.Thread(target=_server.serve_forever, daemon=True)
     _server_thread.start()
     logger.info("firstops proxy listening on 127.0.0.1:%d", port)
