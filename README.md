@@ -2,12 +2,17 @@
 
 Govern what your AI agents do. FirstOps applies identity, policy enforcement, credential brokering, and audit to every **LLM call**, **tool call**, and **MCP call** your agent makes — across LangGraph, the Claude Agent SDK, and the OpenAI Agents SDK, or any custom loop.
 
+## Install
+
 ```bash
-pip install "firstops[langgraph]"   # or [claude], [openai], [all]
+pip install "firstops[langgraph]"   # LangGraph + LangChain
+pip install "firstops[claude]"      # Claude Agent SDK
+pip install "firstops[openai]"      # OpenAI Agents SDK
+pip install "firstops[all]"         # all of the above
+pip install firstops                # core only (management client / custom loops)
 ```
 
-- **Python 3.10+**
-- Core deps: `cryptography`, `httpx`. Your agent framework comes in via the extra you pick.
+Python 3.10+. Core deps are just `cryptography` and `httpx` — your agent framework comes in via the extra you pick.
 
 ---
 
@@ -87,6 +92,16 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 mcp = MultiServerMCPClient({"notion": {"url": firstops.mcp_url("<connection-id>"), "transport": "streamable_http"}})
 tools = await mcp.get_tools()
 ```
+
+## Examples
+
+Runnable agents in [`examples/`](examples/) — each governs the LLM and tool calls; the `*_mcp` variants add a Notion MCP server:
+
+- LangGraph — [`langgraph_basic.py`](examples/langgraph_basic.py), [`langgraph_notion_mcp.py`](examples/langgraph_notion_mcp.py)
+- Claude Agent SDK — [`claude_sdk_basic.py`](examples/claude_sdk_basic.py), [`claude_sdk_mcp.py`](examples/claude_sdk_mcp.py)
+- OpenAI Agents SDK — [`openai_agents_basic.py`](examples/openai_agents_basic.py), [`openai_agents_mcp.py`](examples/openai_agents_mcp.py)
+
+See [`examples/README.md`](examples/README.md) for the env vars to run them.
 
 ## Management client
 
