@@ -1,0 +1,21 @@
+#	Name	Email	Phone	Company	Revenue ($)	Plan	Status
+1	Sarah Chen	sarah.chen@acmecorp.io	+1-415-555-0142	Acme Corp	248,000	Enterprise	Active
+2	Marcus Johnson	marcus.j@brevity.co	+1-212-555-0198	Brevity Inc	85,500	Pro	Active
+3	Priya Sharma	priya@novatech.in	+91-98765-43210	NovaTech	412,000	Enterprise	Active
+4	James O'Brien	jobrien@lumendata.com	+44-20-7946-0958	Lumen Data	67,200	Starter	Churned
+5	Mei Lin	mei.lin@zephyrcloud.io	+65-9123-4567	Zephyr Cloud	195,000	Pro	Active
+6	Carlos Ruiz	cruiz@fintechflow.mx	+52-55-5555-0147	FintechFlow	320,000	Enterprise	Active
+7	Aisha Patel	aisha@gridpoint.ai	+1-650-555-0173	GridPoint AI	54,800	Starter	Trial
+8	Tom Eriksson	tom.e@nordicsaas.se	+46-70-123-4567	Nordic SaaS	128,500	Pro	Active
+9	Rachel Kim	rkim@ocelotlabs.com	+1-310-555-0261	Ocelot Labs	91,000	Pro	Churned
+10	David Müller	dmuller@berlinops.de	+49-30-5555-0184	BerlinOps	275,000	Enterprise	Active
+11	Fatima Al-Hassan	fatima@clearstack.ae	+971-50-555-0139	ClearStack	182,000	Pro	Active
+12	Liam Cooper	lcooper@pulseio.com.au	+61-4-5555-0192	Pulse.io	43,200	Starter	Trial
+13	Yuki Tanaka	yuki@kaizenlabs.jp	+81-3-5555-0167	Kaizen Labs	356,000	Enterprise	Active
+14	Nina Petrova	nina.p@dataweave.ru	+7-495-555-0128	DataWeave	72,400	Pro	Churned
+15	Ben Adeyemi	ben@scalepath.ng	+234-801-555-0145	ScalePath	38,900	Starter	Active
+16	Sophie Dubois	sdubois@cloudnine.fr	+33-1-5555-0176	CloudNine	210,000	Enterprise	Active
+17	Raj Menon	raj@bytebridge.io	+1-512-555-0203	ByteBridge	99,800	Pro	Active
+18	Emma Walsh	ewalsh@peakvector.ie	+353-1-555-0154	PeakVector	156,300	Pro	Active
+19	Alex Novak	anovak@synchub.cz	+420-222-555-016	SyncHub	61,700	Starter	Churned
+20	Isabela Costa	icosta@flowmetrics.br	+55-11-5555-0189	FlowMetrics	287,500	Enterprise	Active
