@@ -121,8 +121,10 @@ admin.connections.register(principal_id=agent.id, name="slack", upstream_url="ht
 
 ## Documentation
 
-- Guides: <https://firstops.dev/docs>
-- Repository: <https://github.com/firstops-dev/firstops-python>
+- [Docs home](https://firstops.dev/docs)
+- Guides: [LangChain / LangGraph](https://firstops.dev/docs/guides/langchain) · [Claude Agent SDK](https://firstops.dev/docs/guides/claude-sdk) · [OpenAI Agents SDK](https://firstops.dev/docs/guides/openai-agents)
+- Concepts: [Identity](https://firstops.dev/docs/concepts/identity) · [Enforcement](https://firstops.dev/docs/concepts/enforcement) · [Connections](https://firstops.dev/docs/concepts/connections)
+- [Repository](https://github.com/firstops-dev/firstops-python)
 
 ## License
 
