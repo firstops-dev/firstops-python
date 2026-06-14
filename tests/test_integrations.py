@@ -181,3 +181,50 @@ from firstops.integrations import langgraph
 def test_langgraph_middleware_requires_langchain():
     with pytest.raises(RuntimeError, match="langchain"):
         langgraph.FirstOpsMiddleware(_rt(Decision(action="allow")))
+
+
+# ---- Google ADK adapter ----------------------------------------------------
+
+from firstops.integrations import google_adk
+
+
+class _AdkTool:
+    def __init__(self, name):
+        self.name = name
+
+
+def test_adk_allow_returns_none_and_stamps_harness():
+    rt = _rt(Decision(action="allow"))
+    cb = google_adk.firstops_before_tool_callback(rt)
+    args = {"city": "Paris"}
+    assert cb(tool=_AdkTool("get_weather"), args=args, tool_context=None) is None
+    assert args == {"city": "Paris"}  # unchanged
+    ev = rt.enforcement.events[0]
+    assert ev.tool_name == "get_weather"
+    assert ev.metadata == {"harness": "google-adk"}
+
+
+def test_adk_deny_short_circuits_with_result_dict():
+    rt = _rt(Decision(action="deny", reason="destructive"))
+    out = google_adk.firstops_before_tool_callback(rt)(
+        tool=_AdkTool("run_shell"), args={"cmd": "x"}, tool_context=None
+    )
+    assert out is not None  # non-None return blocks the tool
+    assert out["status"] == "denied"
+    assert "destructive" in out["error"]
+
+
+def test_adk_modify_rewrites_args_in_place():
+    rt = _rt(_modify({"to": "[REDACTED]"}))
+    args = {"to": "secret@example.com"}
+    out = google_adk.firstops_before_tool_callback(rt)(
+        tool=_AdkTool("send_email"), args=args, tool_context=None
+    )
+    assert out is None  # proceed
+    assert args == {"to": "[REDACTED]"}  # rewritten in place
+
+
+def test_adk_adapter_needs_no_framework():
+    # The callback is a plain function — constructing it must not require ADK.
+    cb = google_adk.firstops_before_tool_callback(_rt(Decision(action="allow")))
+    assert callable(cb)

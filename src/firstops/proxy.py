@@ -44,6 +44,14 @@ _LLM_STRIP_HEADERS = frozenset(
     }
 )
 
+# Response headers we must not forward back to the client: hop-by-hop, plus the
+# ones BaseHTTPRequestHandler sets itself (Server/Date) — forwarding the
+# upstream's copies duplicates them, which strict clients (aiohttp/litellm)
+# reject with "Duplicate 'Server' header".
+_RESP_STRIP_HEADERS = frozenset(
+    {"transfer-encoding", "connection", "server", "date"}
+)
+
 # Hard cap on a forwarded request body (defensive against a huge Content-Length).
 _MAX_BODY_BYTES = 100 * 1024 * 1024
 
@@ -210,6 +218,12 @@ def _make_handler(identity: Identity, local_port: int, enforcement, llm_upstream
     client = httpx.Client(timeout=httpx.Timeout(120.0, connect=10.0))
 
     class ProxyHandler(BaseHTTPRequestHandler):
+        # HTTP/1.1 so strict clients (litellm/aiohttp, Node MCP) get clean
+        # keep-alive framing. Non-streaming responses carry an exact
+        # Content-Length (see _forward); streaming responses close the
+        # connection explicitly.
+        protocol_version = "HTTP/1.1"
+
         def do_POST(self):
             self._dispatch("POST")
 
@@ -264,6 +278,7 @@ def _make_handler(identity: Identity, local_port: int, enforcement, llm_upstream
             if denial is not None:
                 self.send_response(403)
                 self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(denial)))
                 self.end_headers()
                 self.wfile.write(denial)
                 return
@@ -364,20 +379,39 @@ def _make_handler(identity: Identity, local_port: int, enforcement, llm_upstream
                     method, url, headers=headers, content=body,
                     timeout=httpx.Timeout(120.0, connect=10.0),
                 ) as resp:
+                    is_stream = "text/event-stream" in resp.headers.get("content-type", "")
+
+                    if is_stream:
+                        # Streaming (SSE): pass bytes through raw with flushing so
+                        # events arrive live. No Content-Length, so close the
+                        # connection to delimit the body under HTTP/1.1.
+                        self.close_connection = True
+                        self.send_response(resp.status_code)
+                        for k, v in resp.headers.items():
+                            if k.lower() not in _RESP_STRIP_HEADERS:
+                                self.send_header(k, v)
+                        self.send_header("Connection", "close")
+                        self.end_headers()
+                        for chunk in resp.iter_raw():
+                            self.wfile.write(chunk)
+                            self.wfile.flush()
+                        return
+
+                    # Non-streaming: buffer the DECODED body and send it with an
+                    # exact Content-Length, dropping Content-Encoding/Length from
+                    # upstream. This gives a cleanly-framed response that ANY
+                    # client reads correctly (httpx, aiohttp, Node) — a
+                    # close-delimited gzipped body trips stricter clients.
+                    payload = resp.read()  # httpx auto-decompresses
                     self.send_response(resp.status_code)
                     for k, v in resp.headers.items():
-                        if k.lower() not in ("transfer-encoding", "connection"):
+                        if k.lower() not in _RESP_STRIP_HEADERS and k.lower() not in (
+                            "content-encoding", "content-length",
+                        ):
                             self.send_header(k, v)
+                    self.send_header("Content-Length", str(len(payload)))
                     self.end_headers()
-
-                    # Forward the body RAW: httpx auto-decompresses iter_bytes()/
-                    # read(), but we keep the upstream Content-Encoding/Length
-                    # headers, so we must pass the original (possibly gzipped)
-                    # bytes through untouched or the client's decode fails.
-                    # Flush per chunk so SSE/streaming responses arrive live.
-                    for chunk in resp.iter_raw():
-                        self.wfile.write(chunk)
-                        self.wfile.flush()
+                    self.wfile.write(payload)
             except httpx.HTTPError as e:
                 logger.error("upstream request failed: %s", e)
                 self.send_error(502, "upstream request failed")
@@ -386,10 +420,12 @@ def _make_handler(identity: Identity, local_port: int, enforcement, llm_upstream
             """Stream an SSE response, rewriting gateway URLs to localhost."""
             try:
                 with httpx.stream("GET", url, headers=headers, timeout=None) as resp:
+                    self.close_connection = True  # SSE: no length, close-delimited
                     self.send_response(resp.status_code)
                     for k, v in resp.headers.items():
-                        if k.lower() not in ("transfer-encoding", "connection"):
+                        if k.lower() not in _RESP_STRIP_HEADERS:
                             self.send_header(k, v)
+                    self.send_header("Connection", "close")
                     self.end_headers()
 
                     gateway_msg_url = gateway + "/mcp/sse/message"

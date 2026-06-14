@@ -22,6 +22,7 @@ ACTION_MODIFY = "modify"
 HARNESS_LANGGRAPH = "langgraph"
 HARNESS_CLAUDE = "claude-agent-sdk"
 HARNESS_OPENAI_AGENTS = "openai-agents"
+HARNESS_GOOGLE_ADK = "google-adk"
 
 
 def _json_safe(value: Any) -> Any:

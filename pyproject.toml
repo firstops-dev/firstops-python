@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "firstops"
 version = "0.2.0"
-description = "Govern MCP, tool calls, and LLM traffic for AI agents — across LangGraph, Claude Agent SDK, and OpenAI Agents."
+description = "Govern MCP, tool calls, and LLM traffic for AI agents — across LangGraph, Claude Agent SDK, OpenAI Agents, and Google ADK."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -26,7 +26,7 @@ classifiers = [
 ]
 keywords = [
     "mcp", "dpop", "agent", "security", "governance", "llm",
-    "langgraph", "langchain", "openai-agents", "claude", "guardrails",
+    "langgraph", "langchain", "openai-agents", "claude", "google-adk", "guardrails",
 ]
 dependencies = [
     "cryptography>=42.0",
@@ -54,6 +54,9 @@ claude = [
 openai = [
     "openai-agents",
 ]
+adk = [
+    "google-adk[extensions]",
+]
 all = [
     "langchain>=1.0",
     "langgraph",
@@ -61,6 +64,7 @@ all = [
     "langchain-mcp-adapters",
     "claude-agent-sdk",
     "openai-agents",
+    "google-adk[extensions]",
 ]
 dev = [
     "pytest>=8.0",

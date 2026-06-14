@@ -1,6 +1,6 @@
 # FirstOps Python SDK
 
-Govern what your AI agents do. FirstOps applies identity, policy enforcement, credential brokering, and audit to every **LLM call**, **tool call**, and **MCP call** your agent makes — across LangGraph, the Claude Agent SDK, and the OpenAI Agents SDK, or any custom loop.
+Govern what your AI agents do. FirstOps applies identity, policy enforcement, credential brokering, and audit to every **LLM call**, **tool call**, and **MCP call** your agent makes — across LangGraph, the Claude Agent SDK, the OpenAI Agents SDK, and Google ADK, or any custom loop.
 
 ## Install
 
@@ -8,6 +8,7 @@ Govern what your AI agents do. FirstOps applies identity, policy enforcement, cr
 pip install "firstops[langgraph]"   # LangGraph + LangChain
 pip install "firstops[claude]"      # Claude Agent SDK
 pip install "firstops[openai]"      # OpenAI Agents SDK
+pip install "firstops[adk]"         # Google ADK
 pip install "firstops[all]"         # all of the above
 pip install firstops                # core only (management client / custom loops)
 ```
@@ -75,6 +76,16 @@ guard = firstops_tool_input_guardrail(fo)
 def send_email(to: str, body: str) -> str: ...
 ```
 
+**Google ADK** — one `before_tool_callback` governs every tool (block + rewrite args):
+
+```python
+from google.adk.agents import LlmAgent
+from firstops.integrations.google_adk import firstops_before_tool_callback
+
+agent = LlmAgent(name="assistant", model=..., tools=[...],
+                 before_tool_callback=firstops_before_tool_callback(fo))
+```
+
 **Any framework / custom loop** — the base API:
 
 ```python
@@ -100,6 +111,7 @@ Runnable agents in [`examples/`](examples/) — each governs the LLM and tool ca
 - LangGraph — [`langgraph_basic.py`](examples/langgraph_basic.py), [`langgraph_notion_mcp.py`](examples/langgraph_notion_mcp.py)
 - Claude Agent SDK — [`claude_sdk_basic.py`](examples/claude_sdk_basic.py), [`claude_sdk_mcp.py`](examples/claude_sdk_mcp.py)
 - OpenAI Agents SDK — [`openai_agents_basic.py`](examples/openai_agents_basic.py), [`openai_agents_mcp.py`](examples/openai_agents_mcp.py)
+- Google ADK — [`google_adk_basic.py`](examples/google_adk_basic.py)
 
 See [`examples/README.md`](examples/README.md) for the env vars to run them.
 
@@ -122,7 +134,7 @@ admin.connections.register(principal_id=agent.id, name="slack", upstream_url="ht
 ## Documentation
 
 - [Docs home](https://firstops.dev/docs)
-- Guides: [LangChain / LangGraph](https://firstops.dev/docs/guides/langchain) · [Claude Agent SDK](https://firstops.dev/docs/guides/claude-sdk) · [OpenAI Agents SDK](https://firstops.dev/docs/guides/openai-agents)
+- Guides: [LangChain / LangGraph](https://firstops.dev/docs/guides/langchain) · [Claude Agent SDK](https://firstops.dev/docs/guides/claude-sdk) · [OpenAI Agents SDK](https://firstops.dev/docs/guides/openai-agents) · [Google ADK](https://firstops.dev/docs/guides/google-adk)
 - Concepts: [Identity](https://firstops.dev/docs/concepts/identity) · [Enforcement](https://firstops.dev/docs/concepts/enforcement) · [Connections](https://firstops.dev/docs/concepts/connections)
 - [Repository](https://github.com/firstops-dev/firstops-python)
 
