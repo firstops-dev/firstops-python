@@ -1,0 +1,5 @@
+# Ownership of the release machinery. Changes to these paths should be
+# reviewed by a maintainer (auto-requests review on PRs touching them).
+/.github/         @anshal21
+/pyproject.toml   @anshal21
+/Makefile         @anshal21

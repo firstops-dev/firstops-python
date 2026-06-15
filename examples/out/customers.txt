@@ -1,0 +1,161 @@
+Customer Info:
+
+1. Name: Sarah Chen
+   Email: sarah.chen@acmecorp.io
+   Revenue: $248,000
+   Status: Active
+   Plan: Enterprise
+   Company: Acme Corp
+   Phone: +1-415-555-0142
+
+2. Name: Marcus Johnson
+   Email: marcus.j@brevity.co
+   Revenue: $85,500
+   Status: Active
+   Plan: Pro
+   Company: Brevity Inc
+   Phone: +1-212-555-0198
+
+3. Name: Priya Sharma
+   Email: priya@novatech.in
+   Revenue: $412,000
+   Status: Active
+   Plan: Enterprise
+   Company: NovaTech
+   Phone: +91-98765-43210
+
+4. Name: James O'Brien
+   Email: jobrien@lumendata.com
+   Revenue: $67,200
+   Status: Churned
+   Plan: Starter
+   Company: Lumen Data
+   Phone: +44-20-7946-0958
+
+5. Name: Mei Lin
+   Email: mei.lin@zephyrcloud.io
+   Revenue: $195,000
+   Status: Active
+   Plan: Pro
+   Company: Zephyr Cloud
+   Phone: +65-9123-4567
+
+6. Name: Carlos Ruiz
+   Email: cruiz@fintechflow.mx
+   Revenue: $320,000
+   Status: Active
+   Plan: Enterprise
+   Company: FintechFlow
+   Phone: +52-55-5555-0147
+
+7. Name: Aisha Patel
+   Email: aisha@gridpoint.ai
+   Revenue: $54,800
+   Status: Trial
+   Plan: Starter
+   Company: GridPoint AI
+   Phone: +1-650-555-0173
+
+8. Name: Tom Eriksson
+   Email: tom.e@nordicsaas.se
+   Revenue: $128,500
+   Status: Active
+   Plan: Pro
+   Company: Nordic SaaS
+   Phone: +46-70-123-4567
+
+9. Name: Rachel Kim
+   Email: rkim@ocelotlabs.com
+   Revenue: $91,000
+   Status: Churned
+   Plan: Pro
+   Company: Ocelot Labs
+   Phone: +1-310-555-0261
+
+10. Name: David Müller
+    Email: dmuller@berlinops.de
+    Revenue: $275,000
+    Status: Active
+    Plan: Enterprise
+    Company: BerlinOps
+    Phone: +49-30-5555-0184
+
+11. Name: Fatima Al-Hassan
+    Email: fatima@clearstack.ae
+    Revenue: $182,000
+    Status: Active
+    Plan: Pro
+    Company: ClearStack
+    Phone: +971-50-555-0139
+
+12. Name: Liam Cooper
+    Email: lcooper@pulseio.com.au
+    Revenue: $43,200
+    Status: Trial
+    Plan: Starter
+    Company: Pulse.io
+    Phone: +61-4-5555-0192
+
+13. Name: Yuki Tanaka
+    Email: yuki@kaizenlabs.jp
+    Revenue: $356,000
+    Status: Active
+    Plan: Enterprise
+    Company: Kaizen Labs
+    Phone: +81-3-5555-0167
+
+14. Name: Nina Petrova
+    Email: nina.p@dataweave.ru
+    Revenue: $72,400
+    Status: Churned
+    Plan: Pro
+    Company: DataWeave
+    Phone: +7-495-555-0128
+
+15. Name: Ben Adeyemi
+    Email: ben@scalepath.ng
+    Revenue: $38,900
+    Status: Active
+    Plan: Starter
+    Company: ScalePath
+    Phone: +234-801-555-0145
+
+16. Name: Sophie Dubois
+    Email: sdubois@cloudnine.fr
+    Revenue: $210,000
+    Status: Active
+    Plan: Enterprise
+    Company: CloudNine
+    Phone: +33-1-5555-0176
+
+17. Name: Raj Menon
+    Email: raj@bytebridge.io
+    Revenue: $99,800
+    Status: Active
+    Plan: Pro
+    Company: ByteBridge
+    Phone: +1-512-555-0203
+
+18. Name: Emma Walsh
+    Email: ewalsh@peakvector.ie
+    Revenue: $156,300
+    Status: Active
+    Plan: Pro
+    Company: PeakVector
+    Phone: +353-1-555-0154
+
+19. Name: Alex Novak
+    Email: anovak@synchub.cz
+    Revenue: $61,700
+    Status: Churned
+    Plan: Starter
+    Company: SyncHub
+    Phone: +420-222-555-016
+
+20. Name: Isabela Costa
+    Email: icosta@flowmetrics.br
+    Revenue: $287,500
+    Status: Active
+    Plan: Enterprise
+    Company: FlowMetrics
+    Phone: +55-11-5555-0189

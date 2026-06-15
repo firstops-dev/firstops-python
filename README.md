@@ -1,64 +1,142 @@
 # FirstOps Python SDK
 
-Secure MCP proxy sidecar with [DPoP](https://datatracker.ietf.org/doc/html/rfc9449) authentication for AI agents.
-
-FirstOps secures agent-to-tool connections. This SDK runs a lightweight local proxy that transparently adds DPoP-signed authentication headers to every MCP request your agent makes — no changes to your agent code required.
+Govern what your AI agents do. FirstOps applies identity, policy enforcement, credential brokering, and audit to every **LLM call**, **tool call**, and **MCP call** your agent makes — across LangGraph, the Claude Agent SDK, the OpenAI Agents SDK, and Google ADK, or any custom loop.
 
 ## Install
 
 ```bash
-pip install firstops
+pip install "firstops[langgraph]"   # LangGraph + LangChain
+pip install "firstops[claude]"      # Claude Agent SDK
+pip install "firstops[openai]"      # OpenAI Agents SDK
+pip install "firstops[adk]"         # Google ADK
+pip install "firstops[all]"         # all of the above
+pip install firstops                # core only (management client / custom loops)
 ```
 
-## Quick Start
+Python 3.10+. Core deps are just `cryptography` and `httpx` — your agent framework comes in via the extra you pick.
+
+---
+
+## What FirstOps governs
+
+| Surface | How it's wired | What you get |
+|---|---|---|
+| **LLM calls** | point the model `base_url` at the local sidecar | inspect prompts/responses, scrub PII, block, audit |
+| **Tool calls** | one adapter (or `@firstops.tool`) | block / rewrite args / audit — including framework built-ins |
+| **MCP servers** | point the MCP client at the local proxy | server-side policy + **credential brokering** (the agent never holds the upstream token) |
+
+Every action is evaluated by FirstOps and returns `allow` / `deny` / `modify` — your agent logic doesn't change.
+
+## Quick start (LangGraph)
 
 ```python
 import firstops
+from firstops.integrations.langgraph import FirstOpsMiddleware
+from langchain.agents import create_agent
+from langchain_openai import ChatOpenAI
 
-# Start the proxy sidecar (runs in background thread)
-firstops.init(
-    agent_id="your-agent-id",
+fo = firstops.init(
+    agent_id="<agent-uuid>",                      # from the FirstOps dashboard
     private_key_pem=open("agent-key.pem").read(),
 )
 
-# Point your MCP client at localhost:9322 instead of the remote server.
-# The proxy handles auth transparently — DPoP proofs, bearer tokens, SSE streaming.
+# Route the LLM through FirstOps; wire one middleware to govern every tool call.
+llm = ChatOpenAI(model="gpt-4o-mini", base_url=firstops.llm_base_url("openai"), api_key="sk-...")
+agent = create_agent(model=llm, tools=[...], middleware=[FirstOpsMiddleware(fo)])
 
-# When done:
-firstops.shutdown()
+agent.invoke({"messages": [{"role": "user", "content": "..."}]})
 ```
 
-### What happens
+The whole integration is `init()` + a `base_url` swap + one middleware. See [`examples/`](examples/) for runnable agents, including MCP.
 
-1. `firstops.init()` starts a local HTTP proxy on `127.0.0.1:9322`
-2. Your MCP client sends requests to `localhost:9322/mcp/...`
-3. The proxy signs each request with a DPoP proof (RFC 9449, ES256)
-4. The signed request is forwarded to the FirstOps gateway
-5. SSE streaming responses are proxied back with URLs rewritten to localhost
+## Other harnesses
 
-### Configuration
+**Claude Agent SDK** — one `PreToolUse` hook governs every tool (built-ins, MCP, custom):
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `agent_id` | *required* | Your agent's principal ID |
-| `private_key_pem` | *required* | EC P-256 private key (PEM format) |
-| `port` | `9322` | Local proxy port |
-| `gateway_url` | `https://api.firstops.ai` | FirstOps gateway URL |
+```python
+from claude_agent_sdk import query, ClaudeAgentOptions
+from firstops.integrations.claude import firstops_hooks
 
-## Requirements
-
-- Python 3.10+
-- Dependencies: `cryptography`, `httpx`
-
-## Development
-
-```bash
-git clone https://github.com/firstops-dev/firstops-python.git
-cd firstops-python
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
-pytest
+options = ClaudeAgentOptions(hooks=firstops_hooks(fo), permission_mode="bypassPermissions")
+async for _ in query(prompt="...", options=options):
+    pass
 ```
+
+**OpenAI Agents SDK** — a guardrail per tool + the model routed through the sidecar:
+
+```python
+from agents import Agent, function_tool, set_default_openai_client
+from firstops.integrations.openai_agents import firstops_tool_input_guardrail
+from openai import AsyncOpenAI
+
+set_default_openai_client(AsyncOpenAI(base_url=firstops.llm_base_url("openai"), api_key="sk-..."))
+guard = firstops_tool_input_guardrail(fo)
+
+@function_tool(tool_input_guardrails=[guard])
+def send_email(to: str, body: str) -> str: ...
+```
+
+**Google ADK** — one `before_tool_callback` governs every tool (block + rewrite args):
+
+```python
+from google.adk.agents import LlmAgent
+from firstops.integrations.google_adk import firstops_before_tool_callback
+
+agent = LlmAgent(name="assistant", model=..., tools=[...],
+                 before_tool_callback=firstops_before_tool_callback(fo))
+```
+
+**Any framework / custom loop** — the base API:
+
+```python
+@firstops.tool          # govern any callable: block / scrub args / audit
+def send_email(to: str, body: str): ...
+```
+
+## MCP servers
+
+Point your MCP client at the local proxy; FirstOps brokers the upstream credentials.
+
+```python
+from langchain_mcp_adapters.client import MultiServerMCPClient
+
+mcp = MultiServerMCPClient({"notion": {"url": firstops.mcp_url("<connection-id>"), "transport": "streamable_http"}})
+tools = await mcp.get_tools()
+```
+
+## Examples
+
+Runnable agents in [`examples/`](examples/) — each governs the LLM and tool calls; the `*_mcp` variants add a Notion MCP server:
+
+- LangGraph — [`langgraph_basic.py`](examples/langgraph_basic.py), [`langgraph_notion_mcp.py`](examples/langgraph_notion_mcp.py)
+- Claude Agent SDK — [`claude_sdk_basic.py`](examples/claude_sdk_basic.py), [`claude_sdk_mcp.py`](examples/claude_sdk_mcp.py)
+- OpenAI Agents SDK — [`openai_agents_basic.py`](examples/openai_agents_basic.py), [`openai_agents_mcp.py`](examples/openai_agents_mcp.py)
+- Google ADK — [`google_adk_basic.py`](examples/google_adk_basic.py)
+
+See [`examples/README.md`](examples/README.md) for the env vars to run them.
+
+## Management client
+
+Provision agents and connections from your backend:
+
+```python
+from firstops import FirstOps
+
+admin = FirstOps(api_key="fo_key_...")
+agent = admin.agents.create(name="research-bot")      # -> id + private_key (shown once)
+admin.connections.register(principal_id=agent.id, name="slack", upstream_url="https://mcp.slack.com/sse")
+```
+
+## How it works
+
+`firstops.init()` starts a local sidecar and establishes the agent's identity (a DPoP-bound principal — RFC 9449). Tool and LLM actions are forwarded to the FirstOps gateway, which evaluates them against your policies and returns the verdict; MCP and LLM traffic flow through the sidecar with credentials brokered. Enforcement fails open on infrastructure errors; authentication fails closed.
+
+## Documentation
+
+- [Docs home](https://firstops.dev/docs)
+- Guides: [LangChain / LangGraph](https://firstops.dev/docs/guides/langchain) · [Claude Agent SDK](https://firstops.dev/docs/guides/claude-sdk) · [OpenAI Agents SDK](https://firstops.dev/docs/guides/openai-agents) · [Google ADK](https://firstops.dev/docs/guides/google-adk)
+- Concepts: [Identity](https://firstops.dev/docs/concepts/identity) · [Enforcement](https://firstops.dev/docs/concepts/enforcement) · [Connections](https://firstops.dev/docs/concepts/connections)
+- [Repository](https://github.com/firstops-dev/firstops-python)
 
 ## License
 
