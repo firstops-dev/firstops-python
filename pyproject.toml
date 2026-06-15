@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "firstops"
-version = "0.2.0"
+version = "0.3.0"
 description = "Govern MCP, tool calls, and LLM traffic for AI agents — across LangGraph, Claude Agent SDK, OpenAI Agents, and Google ADK."
 readme = "README.md"
 requires-python = ">=3.10"
